@@ -24,10 +24,13 @@ enum token_type {
 };
 
 struct tokenizer_error {
-    const wchar_t *Message;
+private:
+    const wchar_t *_message;
+public:
+    const wchar_t *Message() const;
     enum parse_error_code_t parser_error; //the parser error associated with this tokenizer error
     tokenizer_error(const wchar_t *msg, enum parse_error_code_t perr = parse_error_tokenizer_other)
-        : Message(msg), parser_error(perr) {}
+        : _message(msg), parser_error(perr) {}
     tokenizer_error(const tokenizer_error&) = delete;
 };
 
@@ -78,6 +81,9 @@ struct tok_t {
 
     // If an error, this is the error code.
     tokenizer_error *error { TOK_ERROR_NONE };
+
+    // Whether the token was preceded by an escaped newline.
+    bool preceding_escaped_nl{false};
 
     // If an error, this is the offset of the error within the token. A value of 0 means it occurred
     // at 'offset'.

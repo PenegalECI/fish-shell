@@ -22,6 +22,8 @@
 #include <sstream>
 #include <string>
 #include <type_traits>
+#include <unordered_map>
+#include <tuple>
 #include <vector>
 
 #include "fallback.h"  // IWYU pragma: keep
@@ -321,10 +323,17 @@ bool string_prefixes_string(const wchar_t *proposed_prefix, const wchar_t *value
 /// Test if a string is a suffix of another.
 bool string_suffixes_string(const wcstring &proposed_suffix, const wcstring &value);
 bool string_suffixes_string(const wchar_t *proposed_suffix, const wcstring &value);
+bool string_suffixes_string_case_insensitive(const wcstring &proposed_suffix, const wcstring &value);
 
 /// Test if a string prefixes another without regard to case. Returns true if a is a prefix of b.
 bool string_prefixes_string_case_insensitive(const wcstring &proposed_prefix,
                                              const wcstring &value);
+
+/// Split a string by a separator character.
+wcstring_list_t split_string(const wcstring &val, wchar_t sep);
+
+/// Join a list of strings by a separator character.
+wcstring join_strings(const wcstring_list_t &vals, wchar_t sep);
 
 enum fuzzy_match_type_t {
     // We match the string exactly: FOOBAR matches FOOBAR.
@@ -853,6 +862,22 @@ static const wchar_t *enum_to_str(T enum_val, const enum_map<T> map[]) {
     }
     return NULL;
 };
+
+template<typename... Args>
+using tuple_list = std::vector<std::tuple<Args...>>;
+
+//Given a container mapping one X to many Y, return a list of {X,Y}
+template<typename X, typename Y>
+inline tuple_list<X, Y> flatten(const std::unordered_map<X, std::vector<Y>> &list) {
+    tuple_list<X, Y> results(list.size() * 1.5); //just a guess as to the initial size
+    for (auto &kv : list) {
+        for (auto &v : kv.second) {
+            results.emplace_back(std::make_tuple(kv.first, v));
+        }
+    }
+
+    return results;
+}
 
 void redirect_tty_output();
 
